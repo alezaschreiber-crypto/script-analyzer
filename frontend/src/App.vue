@@ -3,9 +3,9 @@ import { ref } from 'vue'
 
 const input = ref('')
 const response = ref('')
+const scripts = ref([])
 
 async function sendToBackend() {
-   console.log("Send button clicked")
   
   const res = await fetch('http://127.0.0.1:8000/upload', {
     method: 'POST',
@@ -16,7 +16,14 @@ async function sendToBackend() {
   })
 
   const data = await res.json()
-  response.value = data.received
+  response.value = data.message
+  input.value = ''
+
+  
+  const scriptsRes = await fetch(
+    'http://127.0.0.1:8000/scripts'
+  )
+scripts.value = await scriptsRes.json()
 }
 </script>
 
@@ -24,9 +31,20 @@ async function sendToBackend() {
   <div style="padding: 20px">
     <h2>Script Upload Test</h2>
 
-    <input v-model="input" placeholder="Type something..." />
+    <textarea
+     v-model="content" 
+     placeholder="Place script here..."
+    ></textarea>
     <button @click="sendToBackend">Send</button>
 
     <p>Backend response: {{ response }}</p>
+
+    <h3>Scripts</h3>
+
+    <ul>
+      <li v-for="script in scripts" :key="script">
+        {{ script }}
+      </li>
+    </ul>
   </div>
 </template>

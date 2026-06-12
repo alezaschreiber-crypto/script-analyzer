@@ -13,12 +13,19 @@ app.add_middleware(
 )
 
 class Script(BaseModel):
-    text: str
+    title: str
+    content: str
 
 @app.get("/")
 def home():
     return {"message": "Backend is working!"}
+scripts= []
 
 @app.post("/upload")
 def upload_script(script: Script):
-    return {"received": script.text}
+    scripts.append(script.text)
+    return {"message": "Script saved"}
+
+@app.get("/scripts")
+def get_scripts():
+    return scripts
