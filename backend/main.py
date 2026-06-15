@@ -4,6 +4,9 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+scripts = []
+next_id = 1
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -19,11 +22,20 @@ class Script(BaseModel):
 @app.get("/")
 def home():
     return {"message": "Backend is working!"}
-scripts= []
 
 @app.post("/upload")
 def upload_script(script: Script):
-    scripts.append(script.text)
+    global next_id
+
+    new_script = {
+        "id": next_id,
+        "title": script.title,
+        "content": script.content
+    }
+
+    scripts.append(new_script)
+    next_id += 1
+
     return {"message": "Script saved"}
 
 @app.get("/scripts")

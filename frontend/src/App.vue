@@ -1,9 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const input = ref('')
+const title = ref('')
 const response = ref('')
 const scripts = ref([])
+const content = ref('')
+const selectedScript = ref(null)
+
+onMounted(async () => {
+  const res = await fetch('http://127.0.0.1:8000/scripts')
+  scripts.value = await res.json()
+})
 
 async function sendToBackend() {
   
@@ -12,25 +19,28 @@ async function sendToBackend() {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ text: input.value })
+    body: JSON.stringify({ title: title.value, content: content.value })
   })
 
   const data = await res.json()
   response.value = data.message
-  input.value = ''
+  title.value = ''
 
   
   const scriptsRes = await fetch(
     'http://127.0.0.1:8000/scripts'
   )
-scripts.value = await scriptsRes.json()
+  scripts.value = await scriptsRes.json()
 }
 </script>
 
 <template>
   <div style="padding: 20px">
     <h2>Script Upload Test</h2>
-
+    <input
+    v-model="title"
+  placeholder="Script title"
+/>
     <textarea
      v-model="content" 
      placeholder="Place script here..."
@@ -42,9 +52,17 @@ scripts.value = await scriptsRes.json()
     <h3>Scripts</h3>
 
     <ul>
-      <li v-for="script in scripts" :key="script">
-        {{ script }}
-      </li>
+      <li
+  v-for="script in scripts"
+  :key="script.id"
+  @click="selectedScript = script"
+>
+  {{ script.title }}
+    </li>
     </ul>
+   <div v-if="selectedScript">
+      <h3>{{ selectedScript.title }}</h3>
+      <pre>{{ selectedScript.content }}</pre>
+  </div>
   </div>
 </template>
