@@ -6,6 +6,8 @@ const response = ref('')
 const scripts = ref([])
 const content = ref('')
 const selectedScript = ref(null)
+const stats = ref(null)
+const characters = ref(null)
 
 onMounted(async () => {
   const res = await fetch('http://127.0.0.1:8000/scripts')
@@ -31,6 +33,21 @@ async function sendToBackend() {
     'http://127.0.0.1:8000/scripts'
   )
   scripts.value = await scriptsRes.json()
+}
+
+async function getStats(scriptId) {
+  const res = await fetch(
+    `http://127.0.0.1:8000/scripts/${scriptId}/stats`
+  )
+  stats.value = await res.json()
+}
+
+async function getCharacters(scriptId) {
+  const res = await fetch(
+    `http://127.0.0.1:8000/scripts/${scriptId}/characters`
+  )
+
+  characters.value = await res.json()
 }
 </script>
 
@@ -58,11 +75,32 @@ async function sendToBackend() {
   @click="selectedScript = script"
 >
   {{ script.title }}
+    <button @click="getStats(script.id)">
+    View Stats
+  </button>
+  <button @click="getCharacters(script.id)">
+  View Characters
+  </button>
     </li>
     </ul>
    <div v-if="selectedScript">
       <h3>{{ selectedScript.title }}</h3>
       <pre>{{ selectedScript.content }}</pre>
   </div>
+  <div v-if="stats">
+  <h3>Statistics</h3>
+
+  <p>Words: {{ stats.word_count }}</p>
+  <p>Lines: {{ stats.line_count }}</p>
+  <p>Unique Words: {{ stats.unique_words }}</p>
   </div>
+  <div v-if="characters">
+  <h3>Characters</h3>
+  <ul>
+    <li v-for="(count, name) in characters" :key="name">
+      {{ name }} {{ count }}
+    </li>
+  </ul>
+</div>
+</div>
 </template>

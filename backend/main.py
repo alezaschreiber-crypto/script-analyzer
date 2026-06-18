@@ -44,3 +44,74 @@ def get_scripts():
         """
     )
     return cursor.fetchall()
+
+@app.get("/scripts/{script_id}/stats")
+def get_script_stats(script_id: int):
+
+    cursor.execute(
+        """
+        SELECT content
+        FROM scripts
+        WHERE id = %s
+        """,
+        (script_id,)
+    )
+
+    script = cursor.fetchone()
+
+    if not script:
+        return {"error": "Script not found"}
+
+    content = script["content"]
+
+    word_count = len(content.split())
+
+    lines = content.splitlines()
+    line_count = len(lines)
+
+    unique_words = len(set(content.lower().split()))
+
+    return {
+        "word_count": word_count,
+        "line_count": line_count,
+        "unique_words": unique_words
+    }
+
+@app.get("/scripts/{script_id}/characters")
+def get_script_characters(script_id: int):
+
+    cursor.execute(
+        """
+        SELECT content
+        FROM scripts
+        WHERE id = %s
+        """,
+        (script_id,)
+    )
+
+    script = cursor.fetchone()
+
+    if not script:
+        return {"error": "Script not found"}
+
+    content = script["content"]
+
+    lines = content.splitlines()
+
+    characters = {}
+
+    for line in lines:
+
+        line = line.strip()
+
+        if (
+            line.isupper()
+            and len(line) < 30
+            and any(char.isalpha() for char in line)
+        ):
+            if line in characters:
+                characters[line] += 1
+            else:
+                characters[line] = 1
+
+    return characters
