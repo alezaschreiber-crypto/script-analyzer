@@ -122,6 +122,21 @@ Responsibilities:
 - Store scenes
 - Store analytics data
 
+### Script Document Storage
+**AWS S3**
+
+Responsibilities:
+- Store uploaded script files (.txt)
+- Provide durable, scalable object storage for raw documents
+- Serve as the source of truth for original uploads
+
+### Deployment & Infrastructure
+**AWS EC2 + RDS**
+
+Responsibilities:
+- **EC2**: Host the application (frontend and backend services)
+- **RDS**: Managed relational database service for the MySQL database
+
 ## High-Level Database Design
 
 ### Scripts
