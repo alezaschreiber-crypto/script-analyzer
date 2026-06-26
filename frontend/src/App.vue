@@ -8,6 +8,7 @@ const content = ref('')
 const selectedScript = ref(null)
 const stats = ref(null)
 const characters = ref(null)
+const dialogueCount = ref(null)
 
 onMounted(async () => {
   const res = await fetch('http://127.0.0.1:8000/scripts')
@@ -27,6 +28,7 @@ async function sendToBackend() {
   const data = await res.json()
   response.value = data.message
   title.value = ''
+  content.value = ''
 
   
   const scriptsRes = await fetch(
@@ -48,6 +50,12 @@ async function getCharacters(scriptId) {
   )
 
   characters.value = await res.json()
+}
+async function getDialogueCount(scriptId) {
+  const res = await fetch(
+    `http://127.0.0.1:8000/scripts/${scriptId}/dialogue`
+)
+  dialogueCount.value= await res.json()
 }
 </script>
 
@@ -81,6 +89,9 @@ async function getCharacters(scriptId) {
   <button @click="getCharacters(script.id)">
   View Characters
   </button>
+  <button @click="getDialogueCount(script.id)">
+    View Dialogue Count
+  </button>
     </li>
     </ul>
    <div v-if="selectedScript">
@@ -98,6 +109,14 @@ async function getCharacters(scriptId) {
   <h3>Characters</h3>
   <ul>
     <li v-for="(count, name) in characters" :key="name">
+      {{ name }} {{ count }}
+    </li>
+  </ul>
+</div>
+<div v-if="dialogueCount">
+  <h3>Dialogue Count</h3>
+  <ul>
+    <li v-for="(count, name) in dialogueCount" :key="name">
       {{ name }} {{ count }}
     </li>
   </ul>
