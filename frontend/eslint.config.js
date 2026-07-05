@@ -15,6 +15,11 @@ export default defineConfig([
 
   {
     languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
         ...globals.browser,
       },
@@ -22,7 +27,10 @@ export default defineConfig([
   },
 
   js.configs.recommended,
-  pluginReactHooks.configs['recommended-latest'],
+  {
+    plugins: { 'react-hooks': pluginReactHooks },
+    rules: pluginReactHooks.configs['recommended-latest'].rules,
+  },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
 

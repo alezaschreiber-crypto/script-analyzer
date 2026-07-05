@@ -1,9 +1,9 @@
 import re
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from database import connection, cursor 
+from database import get_cursor
 app = FastAPI()
 
 # Structural headings in Project Gutenberg plays that are uppercase but are NOT
@@ -60,7 +60,7 @@ def home():
     return {"message": "Backend is working!"}
 
 @app.post("/upload")
-def upload_script(script: Script):
+def upload_script(script: Script, cursor=Depends(get_cursor)):
 
     cursor.execute(
     """
@@ -70,12 +70,10 @@ def upload_script(script: Script):
     (script.title, script.content)
     )
 
-    connection.commit()
-
     return {"message": "Script saved"}
 
 @app.get("/scripts")
-def get_scripts():
+def get_scripts(cursor=Depends(get_cursor)):
     cursor.execute(
         """
         SELECT *
@@ -85,7 +83,7 @@ def get_scripts():
     return cursor.fetchall()
 
 @app.get("/scripts/{script_id}/stats")
-def get_script_stats(script_id: int):
+def get_script_stats(script_id: int, cursor=Depends(get_cursor)):
 
     cursor.execute(
         """
@@ -117,7 +115,7 @@ def get_script_stats(script_id: int):
     }
 
 @app.get("/scripts/{script_id}/characters")
-def get_script_characters(script_id: int):
+def get_script_characters(script_id: int, cursor=Depends(get_cursor)):
 
     cursor.execute(
         """
@@ -155,7 +153,7 @@ def get_script_characters(script_id: int):
 
     return characters
 @app.get("/scripts/{script_id}/dialogue")
-def get_script_dialogues(script_id: int):
+def get_script_dialogues(script_id: int, cursor=Depends(get_cursor)):
       cursor.execute(
         """
         SELECT content

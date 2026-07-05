@@ -7,29 +7,213 @@
   font-weight: normal;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* --- Data-viz tokens (from the dataviz reference palette) --- */
+:root {
+  --surface-1: #fcfcfb;
+  --page-plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --viz-border: rgba(11, 11, 11, 0.1);
+
+  --series-1: #2a78d6; /* blue  */
+  --series-2: #1baf7a; /* aqua  */
+  --series-3: #eda100; /* yellow */
+  --series-4: #008300; /* green */
+  --series-5: #4a3aa7; /* violet */
+  --series-6: #e34948; /* red   */
+  --series-7: #e87ba4; /* magenta */
+  --series-8: #eb6834; /* orange */
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-1: #1a1a19;
+    --page-plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --viz-border: rgba(255, 255, 255, 0.1);
+
+    --series-1: #3987e5;
+    --series-2: #199e70;
+    --series-3: #c98500;
+    --series-4: #008300;
+    --series-5: #9085e9;
+    --series-6: #e66767;
+    --series-7: #d55181;
+    --series-8: #d95926;
   }
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+.app-header h1 {
+  color: var(--color-heading);
+  font-weight: 600;
+  font-size: 1.6rem;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+.app-header p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
+}
+
+/* --- Cards --- */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--viz-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin-bottom: 1rem;
+}
+
+/* --- Upload form --- */
+.upload input,
+.upload textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--viz-border);
+  border-radius: 8px;
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.upload textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  background: var(--series-1);
+  color: #fff;
+  transition: filter 0.2s;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* --- Script list --- */
+.script-list {
+  list-style: none;
+}
+
+.script-list li {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 0.15s;
+}
+
+.script-list li:hover {
+  background: var(--page-plane);
+}
+
+.script-list li.active {
+  background: var(--series-1);
+  color: #fff;
+}
+
+/* --- Stat tiles --- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 560px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tile {
+  background: var(--surface-1);
+  border: 1px solid var(--viz-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+
+.tile .value {
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.tile .label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 0.25rem;
+}
+
+.chart-wrap {
+  width: 100%;
+}
+
+.empty {
+  color: var(--text-muted);
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.legend .item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
 }
