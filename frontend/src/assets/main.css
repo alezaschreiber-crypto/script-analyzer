@@ -108,6 +108,31 @@
   resize: vertical;
 }
 
+.file-picker {
+  display: block;
+  margin: 0.2rem 0 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.file-picker input {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  font: inherit;
+}
+
+.error {
+  color: #c43d3d;
+  font-size: 0.85rem;
+}
+
+.warning {
+  color: #a06a00;
+  font-size: 0.85rem;
+}
+
 button {
   font: inherit;
   cursor: pointer;
@@ -148,6 +173,53 @@ button:hover {
 .script-list li.active {
   background: var(--series-1);
   color: #fff;
+}
+
+.delete-script {
+  float: right;
+  padding: 0.2rem 0.45rem;
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+}
+
+.delete-script:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10;
+}
+
+.modal {
+  width: min(420px, 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal h2 {
+  margin-bottom: 0.75rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.secondary-button {
+  background: var(--gridline);
+  color: var(--text-primary);
 }
 
 /* --- Stat tiles --- */
@@ -216,4 +288,29 @@ button:hover {
   height: 12px;
   border-radius: 3px;
   flex: none;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid var(--gridline);
+  text-align: left;
+}
+
+th {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }

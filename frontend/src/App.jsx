@@ -27,11 +27,16 @@ const SERIES = [
 function App() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [fileName, setFileName] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const [uploadWarning, setUploadWarning] = useState('')
+  const [pendingUpload, setPendingUpload] = useState(null)
   const [response, setResponse] = useState('')
   const [scripts, setScripts] = useState([])
   const [selectedScript, setSelectedScript] = useState(null)
   const [stats, setStats] = useState(null)
   const [dialogue, setDialogue] = useState(null)
+  const [analytics, setAnalytics] = useState(null)
 
   async function loadScripts() {
     const res = await fetch(`${API}/scripts`)
@@ -44,17 +49,90 @@ function App() {
     loadScripts()
   }, [])
 
-  async function sendToBackend() {
+  async function saveScript(payload) {
     const res = await fetch(`${API}/upload`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, content }),
+      body: JSON.stringify(payload),
     })
     const data = await res.json()
     setResponse(data.message)
+    setUploadWarning(data.warning || '')
     setTitle('')
     setContent('')
+    setFileName('')
     loadScripts()
+  }
+
+  async function sendToBackend() {
+    if (!title.trim() || !content.trim()) {
+      setUploadError('Add a title and script content before saving.')
+      return
+    }
+
+    setUploadError('')
+    setUploadWarning('')
+    const payload = { title: title.trim(), content }
+    const validationRes = await fetch(`${API}/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const validation = await validationRes.json()
+    if (validation.format_check?.warning) {
+      setPendingUpload(payload)
+      return
+    }
+    await saveScript(payload)
+  }
+
+  async function deleteScript(script) {
+    if (!window.confirm(`Delete “${script.title}”?`)) return
+    await fetch(`${API}/scripts/${script.id}`, { method: 'DELETE' })
+    if (selectedScript?.id === script.id) {
+      setSelectedScript(null)
+      setStats(null)
+      setDialogue(null)
+      setAnalytics(null)
+    }
+    loadScripts()
+  }
+
+  function discardPendingUpload() {
+    setPendingUpload(null)
+    setTitle('')
+    setContent('')
+    setFileName('')
+    setUploadWarning('')
+    setUploadError('')
+    setResponse('')
+  }
+
+  async function handleFileChange(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      setUploadError('Please choose a plain-text .txt file.')
+      event.target.value = ''
+      return
+    }
+
+    try {
+      const text = await file.text()
+      if (!text.trim()) {
+        setUploadError('That file is empty.')
+        return
+      }
+      setContent(text)
+      setFileName(file.name)
+      setUploadError('')
+      if (!title.trim()) {
+        setTitle(file.name.replace(/\.txt$/i, ''))
+      }
+    } catch {
+      setUploadError('The file could not be read.')
+    }
   }
 
   // Selecting a script loads its analytics in one step.
@@ -62,12 +140,15 @@ function App() {
     setSelectedScript(script)
     setStats(null)
     setDialogue(null)
-    const [statsRes, dialogueRes] = await Promise.all([
+    setAnalytics(null)
+    const [statsRes, dialogueRes, analyticsRes] = await Promise.all([
       fetch(`${API}/scripts/${script.id}/stats`),
       fetch(`${API}/scripts/${script.id}/dialogue`),
+      fetch(`${API}/scripts/${script.id}/analytics`),
     ])
     setStats(await statsRes.json())
     setDialogue(await dialogueRes.json())
+    setAnalytics(await analyticsRes.json())
   }
 
   return (
@@ -91,7 +172,14 @@ function App() {
               placeholder="Paste script text here…"
               onChange={(e) => setContent(e.target.value)}
             />
+            <label className="file-picker">
+              <span>Or choose a .txt file</span>
+              <input type="file" accept=".txt,text/plain" onChange={handleFileChange} />
+            </label>
+            {fileName && <p className="hint">Loaded: {fileName}</p>}
             <button onClick={sendToBackend}>Save script</button>
+            {uploadError && <p className="error">{uploadError}</p>}
+            {uploadWarning && <p className="warning">{uploadWarning}</p>}
             {response && <p className="hint">{response}</p>}
           </section>
 
@@ -110,6 +198,15 @@ function App() {
                     onClick={() => selectScript(script)}
                   >
                     {script.title}
+                    <button
+                      className="delete-script"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        deleteScript(script)
+                      }}
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -127,10 +224,34 @@ function App() {
               title={selectedScript.title}
               stats={stats}
               dialogue={dialogue}
+              analytics={analytics}
             />
           )}
         </main>
       </div>
+      {pendingUpload && (
+        <div className="modal-backdrop" role="presentation">
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="upload-warning-title">
+            <h2 id="upload-warning-title">Format warning</h2>
+            <p>
+              This file may not be a Project Gutenberg-formatted play. Analytics may be incomplete.
+            </p>
+            <p>Upload anyway?</p>
+            <div className="modal-actions">
+              <button onClick={discardPendingUpload} className="secondary-button">No</button>
+              <button
+                onClick={async () => {
+                  const payload = pendingUpload
+                  setPendingUpload(null)
+                  await saveScript(payload)
+                }}
+              >
+                Yes, upload anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -255,8 +376,8 @@ function Distribution({ data }) {
   )
 }
 
-function Dashboard({ title, stats, dialogue }) {
-  const loading = stats === null || dialogue === null
+function Dashboard({ title, stats, dialogue, analytics }) {
+  const loading = stats === null || dialogue === null || analytics === null
 
   // { NAME: lines } → sorted [{ name, lines }]
   const speakers =
@@ -268,6 +389,8 @@ function Dashboard({ title, stats, dialogue }) {
       : []
 
   const topSpeakers = speakers.slice(0, 10)
+  const characterMetrics = analytics?.characters ?? []
+  const scenes = analytics?.scenes ?? []
 
   // Distribution: top 7 named + everyone else folded into "Other".
   const TOP = 7
@@ -285,6 +408,27 @@ function Dashboard({ title, stats, dialogue }) {
         <>
           {stats && !stats.error && <StatTiles stats={stats} />}
 
+          {characterMetrics.length > 0 && (
+            <section className="card">
+              <h2>Character metrics</h2>
+              <div className="table-scroll">
+                <table>
+                  <thead><tr><th>Character</th><th>Words</th><th>Share</th><th>Scenes</th></tr></thead>
+                  <tbody>
+                    {characterMetrics.map((character) => (
+                      <tr key={character.name}>
+                        <td>{character.name}</td>
+                        <td>{numberFmt.format(character.words)}</td>
+                        <td>{character.dialogue_percentage}%</td>
+                        <td>{character.scene_count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
           <section className="card">
             <h2>Top speaking characters</h2>
             {topSpeakers.length > 0 ? (
@@ -300,6 +444,26 @@ function Dashboard({ title, stats, dialogue }) {
             <section className="card">
               <h2>Dialogue distribution</h2>
               <Distribution data={distribution} />
+            </section>
+          )}
+
+          {scenes.length > 0 && (
+            <section className="card">
+              <h2>Scene participation</h2>
+              <div className="table-scroll">
+                <table>
+                  <thead><tr><th>Scene</th><th>Words</th><th>Characters</th></tr></thead>
+                  <tbody>
+                    {scenes.map((scene) => (
+                      <tr key={scene.name}>
+                        <td>{scene.name}</td>
+                        <td>{numberFmt.format(scene.words)}</td>
+                        <td>{scene.characters.join(', ') || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </section>
           )}
         </>
